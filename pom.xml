@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.thundra</groupId>
+    <artifactId>thundra-lambda-warmup</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>thundra-lambda-warmup</name>
+    <description>Thundra Lambda Warmup</description>
+
+    <url>https://www.thundra.io</url>
+    <scm>
+        <connection>scm:git:git@github.com:thundra-io/thundra-lambda-warmup.git</connection>
+        <url>https://github.com/thundra-io/thundra-lambda-warmup</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>serkan</id>
+            <name>Serkan OZAL</name>
+            <email>serkan@thundra.io</email>
+        </developer>
+    </developers>
+
+    <properties>
+
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <opsgenie-oss.version>2.0.0</opsgenie-oss.version>
+        <sirocco.oss.version>2.0.0</sirocco.oss.version>
+
+        <aws.sdk.version>1.11.118</aws.sdk.version>
+        <aws.lambda.version>1.1.0</aws.lambda.version>
+        <aws.lambda.log4j.version>1.0.0</aws.lambda.log4j.version>
+        <jackson.version>2.6.6</jackson.version>
+        <json.version>20160810</json.version>
+        <log4j.version>1.2.17</log4j.version>
+
+        <mockito.version>2.7.5</mockito.version>
+        <powermock.version>1.7.0RC4</powermock.version>
+        <junit.version>4.12</junit.version>
+        <hamcrest.version>1.3</hamcrest.version>
+
+        <maven.shade.plugin.version>2.3</maven.shade.plugin.version>
+
+    </properties>    
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven.shade.plugin.version}</version>
+                 <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                    </transformers>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.opsgenie.sirocco</groupId>
+            <artifactId>sirocco-api</artifactId>
+            <version>${sirocco.oss.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-core</artifactId>
+            <version>${aws.lambda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-events</artifactId>
+            <version>${aws.lambda.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-lambda-java-log4j</artifactId>
+            <version>${aws.lambda.log4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-lambda</artifactId>
+            <version>${aws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.opsgenie</groupId>
+            <artifactId>opsgenie-aws-core</artifactId>
+            <version>${opsgenie-oss.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>${json.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>release-artifacts</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>s3-upload-maven-plugin</artifactId>
+                        <version>1.4</version>
+                        <configuration>
+                            <accessKey>${AWS_ACCESS_KEY_ID}</accessKey>
+                            <secretKey>${AWS_SECRET_KEY}</secretKey>
+                            <bucketName>thundra-dist</bucketName>
+                            <source>${project.basedir}/target/${project.artifactId}-${project.version}.jar</source>
+                            <destination>${project.artifactId}.jar</destination>
+                        </configuration>
+                        <executions>
+                            <!-- Tokyo -->
+                            <execution>
+                                <id>s3-upload-ap-northeast-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ap-northeast-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ap-northeast-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Seoul -->
+                            <execution>
+                                <id>s3-upload-ap-northeast-2</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ap-northeast-2.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ap-northeast-2</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Mumbai -->
+                            <execution>
+                                <id>s3-upload-ap-south-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ap-south-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ap-south-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Singapore -->
+                            <execution>
+                                <id>s3-upload-ap-southeast-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ap-southeast-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ap-southeast-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Sydney -->
+                            <execution>
+                                <id>s3-upload-ap-southeast-2</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ap-southeast-2.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ap-southeast-2</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Central -->
+                            <execution>
+                                <id>s3-upload-ca-central-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.ca-central-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-ca-central-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Frankfurt -->
+                            <execution>
+                                <id>s3-upload-eu-central-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.eu-central-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-eu-central-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Ireland -->
+                            <execution>
+                                <id>s3-upload-eu-west-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.eu-west-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-eu-west-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- London -->
+                            <execution>
+                                <id>s3-upload-eu-west-2</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.eu-west-2.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-eu-west-2</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Paris -->
+                            <execution>
+                                <id>s3-upload-eu-west-3</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.eu-west-3.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-eu-west-3</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Sao Paulo -->
+                            <execution>
+                                <id>s3-upload-sa-east-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.sa-east-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-sa-east-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- N. Virginia -->
+                            <execution>
+                                <id>s3-upload-us-east-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.us-east-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-us-east-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Ohio -->
+                            <execution>
+                                <id>s3-upload-us-east-2</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.us-east-2.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-us-east-2</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- N. California -->
+                            <execution>
+                                <id>s3-upload-us-west-1</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.us-west-1.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-us-west-1</bucketName>
+                                </configuration>
+                            </execution>
+                            <!-- Oregon -->
+                            <execution>
+                                <id>s3-upload-us-west-2</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                                <configuration>
+                                    <endpoint>s3.us-west-2.amazonaws.com</endpoint>
+                                    <bucketName>thundra-dist-us-west-2</bucketName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>release-cloudformation-template</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.bazaarvoice.maven.plugins</groupId>
+                        <artifactId>s3-upload-maven-plugin</artifactId>
+                        <version>1.4</version>
+                        <configuration>
+                            <accessKey>${AWS_ACCESS_KEY_ID}</accessKey>
+                            <secretKey>${AWS_SECRET_KEY}</secretKey>
+                            <bucketName>thundra-public</bucketName>
+                            <endpoint>s3.us-west-2.amazonaws.com</endpoint>
+                            <source>${project.basedir}/thundra-lambda-warmup-cloudformation-template.yaml</source>
+                            <destination>thundra-lambda-warmup/thundra-lambda-warmup-cloudformation-template.yaml</destination>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>template-s3-upload</id>
+                                <goals>
+                                    <goal>s3-upload</goal>
+                                </goals>
+                                <phase>install</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

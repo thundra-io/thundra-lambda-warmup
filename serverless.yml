@@ -1,0 +1,40 @@
+service: thundra-lambda-warmup
+
+custom:
+  stage: default # This is optional. Specify stage here if you want
+  region: us-west-2 # This is MANDATORY. Configure the region here
+  deploymentBucket: thundra-lambda-warmup-us-west-2 # This is MANDATORY. Configure the deployment bucket here
+  memorySize: 512 # This is optional. Specify memory size here if you want
+  timeout: 300 # This is optional. Specify timeout here if you want
+  profile: thundra # This is optional. Configure profile here if you want
+
+package:
+  artifact: target/thundra-lambda-warmup-1.0.0.jar
+
+provider:
+  name: aws
+  runtime: java8
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  deploymentBucket: ${self:custom.deploymentBucket}
+  profile: ${self:custom.profile}
+  memorySize: ${self:custom.memorySize}
+  timeout: ${self:custom.timeout}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:ListAliases
+        - lambda:ListFunctions
+      Resource: [
+        "*"
+      ]
+
+functions:
+  thundra-lambda-warmup:
+    name: thundra-lambda-warmup
+    handler: io.thundra.lambda.warmup.WarmupHandler
+    events:
+      - schedule:
+          name: thundra-lambda-warmup-schedule
+          rate: rate(5 minutes)

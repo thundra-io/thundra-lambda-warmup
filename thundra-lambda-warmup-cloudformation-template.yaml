@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Thundra Lambda Warmup"
+Parameters:
+  FunctionNameParameter:
+    Type: String
+    Default: "thundra-lambda-warmup"
+    Description: "Name of the 'thundra-lambda-warmup' Lambda function"
+  TimeoutParameter:
+    Type: Number
+    Default: 300
+    MinValue: 1
+    MaxValue: 300
+    Description: "'thundra-lambda-warmup' Lambda function timeout value in seconds."
+  MemorySizeParameter:
+    Type: Number
+    Default: 512
+    AllowedValues:
+      - 128
+      - 192
+      - 256
+      - 320
+      - 384
+      - 448
+      - 512
+      - 576
+      - 640
+      - 704
+      - 768
+      - 832
+      - 896
+      - 960
+      - 1024
+      - 1088
+      - 1152
+      - 1216
+      - 1280
+      - 1344
+      - 1408
+      - 1472
+      - 1536
+      - 1600
+      - 1664
+      - 1728
+      - 1792
+      - 1856
+      - 1920
+      - 1984
+      - 2048
+      - 2112
+      - 2176
+      - 2240
+      - 2304
+      - 2368
+      - 2432
+      - 2496
+      - 2560
+      - 2624
+      - 2688
+      - 2752
+      - 2816
+      - 2880
+      - 2944
+      - 3008
+    Description: "'thundra-lambda-warmup' Lambda function memory size."
+Resources:
+  ThundraLambdaWarmupExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: !Sub "${FunctionNameParameter}-${AWS::Region}-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub "${FunctionNameParameter}-${AWS::Region}-role"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "logs:CreateLogStream"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${FunctionNameParameter}:*"
+              - Effect: "Allow"
+                Action: "logs:PutLogEvents"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${FunctionNameParameter}:*:*"
+              - Effect: "Allow"
+                Action: "lambda:ListFunctions"
+                Resource: "*"
+              - Effect: "Allow"
+                Action: [ "lambda:InvokeFunction", "lambda:ListAliases" ]
+                Resource: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+  ThundraLambdaWarmupLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+       LogGroupName: !Sub "/aws/lambda/${FunctionNameParameter}"
+  ThundraLambdaWarmupFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      FunctionName:
+        Ref: FunctionNameParameter
+      Handler: "io.thundra.lambda.warmup.WarmupHandler"
+      Description: "Thundra Lambda Warmup"
+      Role: !GetAtt [ ThundraLambdaWarmupExecutionRole, Arn ]
+      Code:
+        S3Bucket: !Sub "thundra-dist-${AWS::Region}"
+        S3Key: "thundra-lambda-warmup.jar"
+      Runtime: java8
+      Timeout:
+        Ref: TimeoutParameter
+      MemorySize:
+        Ref: MemorySizeParameter
+    DependsOn: [ThundraLambdaWarmupExecutionRole, ThundraLambdaWarmupLogGroup]
+  ThundraLambdaWarmupSchedule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      ScheduleExpression: "rate(5 minutes)"
+      State: "ENABLED"
+      Name: !Sub "${FunctionNameParameter}-schedule"
+      Targets:
+        -
+          Arn:
+            Fn::GetAtt:
+              - "ThundraLambdaWarmupFunction"
+              - "Arn"
+          Id: !Sub "${FunctionNameParameter}-schedule"
+  ThundraLambdaWarmupSchedulePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      FunctionName:
+        Fn::GetAtt:
+          - "ThundraLambdaWarmupFunction"
+          - "Arn"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn:
+        Fn::GetAtt:
+          - "ThundraLambdaWarmupSchedule"
+          - "Arn"
