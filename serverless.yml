@@ -1,12 +1,12 @@
 service: thundra-lambda-warmup
 
 custom:
+  region: !!! AWS REGION HERE !!! # This is MANDATORY. Configure the region here
+  deploymentBucket: !!! EXISTING DEPLOYMENT BUCKET HERE !!! # This is MANDATORY. Configure the deployment bucket here
   stage: default # This is optional. Specify stage here if you want
-  region: us-west-2 # This is MANDATORY. Configure the region here
-  deploymentBucket: thundra-lambda-warmup-us-west-2 # This is MANDATORY. Configure the deployment bucket here
   memorySize: 512 # This is optional. Specify memory size here if you want
   timeout: 300 # This is optional. Specify timeout here if you want
-  profile: thundra # This is optional. Configure profile here if you want
+  profile: default # This is optional. Configure profile here if you want
 
 package:
   artifact: target/thundra-lambda-warmup-1.0.0.jar
