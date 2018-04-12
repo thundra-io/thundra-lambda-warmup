@@ -34,12 +34,12 @@ import java.util.*;
  *      <code>100 + &lt;wait_time&gt; milliseconds</code> for warmup requests at the target Lambda function side.
  * </p>
  * <p>
- *      As mentioned above, this strategy is smart enough to scale up/down warmup invocation counts
- *      according to target Lambda function usage stats. By this feature, hot functions are invoked
+ *      As mentioned above, this strategy can also be configured to be smart enough to scale up/down warmup
+ *      invocation counts according to target Lambda function usage stats. By this feature, hot functions are invoked
  *      with higher concurrent warmup invocation count by automatically increasing invocation count
  *      from standard/defined invocation count. The opposite logic is valid of cold functions
  *      by warming-up them lower concurrent warmup invocation count by automatically decreasing
- *      invocation count. To take advantage of this feature (note that this feature is optional,
+ *      invocation count. To take advantage of this feature (note that this feature is optional and disabled by default,
  *      so in case of empty/null return value, auto scale feature is not used and goes on with standard
  *      invocation count as in {@link StandardWarmupStrategy}), target Lambda function should return an
  *      <code>instanceId</code> unique to the Lambda handler instance (ex. a random generated UUID for
@@ -91,18 +91,18 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
 
     /**
      * Name of the <code>boolean</code> typed property
-     * which disables warmup scale behaviour which is enabled by default
+     * which enabled warmup scale behaviour which is disabled by default
      * and scale factor is configured by {@link #WARMUP_SCALE_FACTOR_PROP_NAME} property.
      */
-    public static final String DISABLE_WARMUP_SCALE_PROP_NAME =
-            "thundra.lambda.warmup.disableWarmupScale";
+    public static final String ENABLE_WARMUP_SCALE_PROP_NAME =
+            "thundra.lambda.warmup.enableWarmupScale";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, Map<String, Date>> functionLatestRequestTimeMap =
             new HashMap<String, Map<String, Date>>();
     private final long functionInstanceIdleTime;
     private final float warmupScaleFactor;
-    private final boolean disableWarmupScale;
+    private final boolean enableWarmupScale;
 
     public StatAwareWarmupStrategy() {
         this(WarmupHandler.DEFAULT_WARMUP_PROPERTY_PROVIDER);
@@ -117,8 +117,8 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                 warmupPropertyProvider.getFloat(
                         WARMUP_SCALE_FACTOR_PROP_NAME,
                         DEFAULT_WARMUP_SCALE_FACTOR);
-        this.disableWarmupScale =
-                warmupPropertyProvider.getBoolean(DISABLE_WARMUP_SCALE_PROP_NAME);
+        this.enableWarmupScale =
+                warmupPropertyProvider.getBoolean(ENABLE_WARMUP_SCALE_PROP_NAME);
     }
 
     @Override
@@ -155,7 +155,7 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
     protected int getInvocationCount(String functionName, int defaultInvocationCount, int configuredInvocationCount,
                                      WarmupFunctionInfo functionInfo) {
         int invocationCount;
-        if (disableWarmupScale) {
+        if (!enableWarmupScale) {
             invocationCount =
                     super.getInvocationCount(functionName, defaultInvocationCount, configuredInvocationCount, functionInfo);
             logger.info(
