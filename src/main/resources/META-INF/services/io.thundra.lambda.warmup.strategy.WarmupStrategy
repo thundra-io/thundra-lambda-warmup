@@ -1,0 +1,2 @@
+io.thundra.lambda.warmup.strategy.impl.StandardWarmupStrategy
+io.thundra.lambda.warmup.strategy.impl.StatAwareWarmupStrategy
