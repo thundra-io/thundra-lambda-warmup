@@ -118,7 +118,7 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                         WARMUP_SCALE_FACTOR_PROP_NAME,
                         DEFAULT_WARMUP_SCALE_FACTOR);
         this.enableWarmupScale =
-                warmupPropertyProvider.getBoolean(ENABLE_WARMUP_SCALE_PROP_NAME);
+                warmupPropertyProvider.getBoolean(ENABLE_WARMUP_SCALE_PROP_NAME, false);
     }
 
     @Override
