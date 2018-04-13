@@ -154,7 +154,36 @@ public class MyAwesomeRequestStreamHandler implements RequestStreamHandler {
 ```
 
 ### NodeJS
+#### 1) With [thundra-lambda-nodejs-warmup](https://github.com/thundra-io/thundra-lambda-nodejs-warmup):
 
+```bash
+npm install @thundra/warmup --save
+```
+
+```js
+const thundraWarmup = require("@thundra/warmup");
+
+const thundraWarmupWrapper = thundraWarmup();
+
+exports.handler = thundraWarmupWrapper((event, context, callback) => {
+    callback(null, "No more cold starts!");
+});
+```
+
+You can also pass an optional callback function which will be called on warmup requests.
+
+```js
+const thundraWarmup = require("@thundra/warmup");
+
+const optionalCallback = () => console.log(Warming up...);
+
+const thundraWarmupWrapper = thundraWarmup(optionalCallback);
+
+exports.handler = thundraWarmupWrapper((event, context, callback) => {
+    callback(null, "No more cold starts!");
+});
+```
+#### 2) Manually 
 ``` javascript
 function checkAndHandleWarmupRequest(event, callback) {
     // Check whether it is empty request which is used as default warmup request
