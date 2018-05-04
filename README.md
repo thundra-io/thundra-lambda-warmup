@@ -283,6 +283,97 @@ def lambda_handler(event, context):
         return 'Hello from Lambda'
 ```
 
+### Go
+
+You can use [thundra-lambda-agent-go](https://github.com/thundra-io/thundra-lambda-agent-go) if you don't want to
+implement warmup handling by yourself.
+
+If you don't want to use the agent, keep on reading.
+#### Handler With Event
+If your lambda handler expects to receive a struct you can use the following implementation.
+
+Note that this version doesn't allow you to send configurable requests from thundra-lambda-warmup because it is 
+designed to send string typed stream messages.
+``` go
+func checkAndHandleWarmupRequest(event MyEvent) bool {
+    if event == (MyEvent{}) {
+        fmt.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+        time.Sleep(time.Millisecond * 100)
+        return true
+    }
+    return false
+}
+
+// This is your lambda function
+func HandleLambdaEvent(ctx context.Context, event MyEvent) (MyResponse, error) {
+    if checkAndHandleWarmupRequest(event) {
+        // Return empty or dummy response on warmup request
+        return MyResponse{}, nil
+    } else {
+        // TODO implement
+        return MyResponse{Message:"Hello from Thundra"},nil
+    }
+}
+```
+
+#### Handler With Stream
+If your lambda handler expects to receive a string typed stream data then you can use the following implementation.
+
+``` go
+func checkAndHandleWarmupRequest(event string) bool {
+    if event == "" {
+        fmt.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+        time.Sleep(time.Millisecond * 100)
+        return true
+    }
+
+    // Check whether it is warmup request
+    if strings.HasPrefix(event, "#warmup") {
+        delay := 100
+
+        // Warmup data has the following format "#warmup wait=200 k1=v1"
+        //Therefore we need to parse it to only have arguments in key=value format
+        sp := strings.SplitAfter(event, "#warmup")[1]
+        args := strings.Fields(sp)
+        // Iterate over all warmup arguments
+        for _, a := range args {
+            argParts := strings.Split(a, "=")
+            // Check whether argument is in key=value format
+            if len(argParts) == 2 {
+                k := argParts[0]
+                v := argParts[1]
+                // Check whether argument is "wait" argument
+                // which specifies extra wait time before returning from request
+                if k == "wait" {
+                    w, err := strconv.Atoi(v)
+                    if err != nil {
+                        fmt.Println(err)
+                    } else {
+                        delay += w
+                    }
+                }
+            }
+        }
+        fmt.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
+        time.Sleep(time.Millisecond * time.Duration(delay))
+        return true;
+    }
+
+    return false
+}
+
+// This is your lambda function
+func HandleLambdaEvent(ctx context.Context, event string) (MyResponse, error) {
+    if checkAndHandleWarmupRequest(event) {
+        // Return empty or dummy response on warmup request
+        return MyResponse{}, nil
+    } else {
+        // TODO implement
+        return MyResponse{Message:"Hello from Thundra"},nil
+    }
+}
+```
+
 ## The API
 
 ### WarmupHandler
