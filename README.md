@@ -283,6 +283,82 @@ def lambda_handler(event, context):
         return 'Hello from Lambda'
 ```
 
+### Go
+``` go
+func checkAndHandleWarmupRequest(event interface{}) bool {
+
+    // Check if the event is an empty struct
+    if isZeroEvent(event) {
+        fmt.Println("Received warmup request as empty message. Handling with 100 milliseconds delay ...")
+        time.Sleep(time.Millisecond * 100)
+        return true
+    }
+
+    if reflect.TypeOf(event).Kind() == reflect.String {
+        // Check whether it is warmup request
+        s := event.(string)
+        if strings.HasPrefix(s, "#warmup") {
+            delay := 100
+
+            // Warmup data has the following format "#warmup wait=200 k1=v1"
+            //Therefore we need to parse it to only have arguments in k=v format
+            sp := strings.SplitAfter(s, "#warmup")[1]
+            args := strings.Fields(sp)
+            // Iterate over all warmup arguments
+            for _, a := range args {
+                argParts := strings.Split(a, "=")
+                // Check whether argument is in key=value format
+                if len(argParts) == 2 {
+                    k := argParts[0]
+                    v := argParts[1]
+                    // Check whether argument is "wait" argument
+                    // which specifies extra wait time before returning from request
+                    if k == "wait" {
+                        w, err := strconv.Atoi(v)
+                        if err != nil {
+                            fmt.Println(err)
+                        } else {
+                            delay += w
+                        }
+                    }
+                }
+            }
+            fmt.Println("Received warmup request as warmup message. Handling with ", delay, " milliseconds delay ...")
+            time.Sleep(time.Millisecond * time.Duration(delay))
+            return true;
+        }
+    }
+    return false
+}
+
+// isZeroEvent compares whether event is equals to the zero value for event's type
+func isZeroEvent(event interface{}) bool {
+
+    // Create a new zero value with the same type as event
+    t := reflect.TypeOf(event)
+    zero := reflect.Zero(t)
+
+    // Use sprint to compare each individual field values of event with zero event
+    ev := fmt.Sprint(event)
+    em := fmt.Sprint(zero)
+    if ev == em {
+        return true
+    }
+    return false
+}
+
+// This is your lambda function
+func HandleLambdaEvent(event MyEvent,ctx context.Context) (MyResponse, error) {
+    if checkAndHandleWarmupRequest(event) {
+        // Return empty or dummy response on warmup request
+        return MyResponse{}, nil
+    } else {
+        // TODO implement
+        return MyResponse{Message:"Hello from Thundra"},nil
+    }
+}
+```
+
 ## The API
 
 ### WarmupHandler
