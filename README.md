@@ -12,7 +12,7 @@ The following ways are supported to setup `thundra-lambda-warmup` on user end:
 ### Manual Setup
 If the user end is not an automated deployment environment, setup `thundra-lambda-warmup` manually on user end by CloudFormation template. See [here](https://docs.thundra.io/docs/warmup-manual-setup) for the details.
 ### Serverless Framework
-Deploys `thundra-lambda-warmup` by using [Serverless framework](https://serverless.com/framework/). If a Serverless framework is already used for deploying your Lambda functions, this is the *recommended* option with the least number of manual actions. See [here](https://docs.thundra.io/docs/warmup-serverless-framework) for the details.
+Deploys `thundra-lambda-warmup` by using [Serverless framework](https://serverless.com/framework/). If a Serverless framework is already used for deploying your Lambda functions, this is the *recommended* option with the least number of manual actions. See [here](https://docs.thundra.io/docs/serverless-framework) for the details.
 
 ## How to Use
 
