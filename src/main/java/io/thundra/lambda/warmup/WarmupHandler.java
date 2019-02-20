@@ -18,6 +18,7 @@ import io.thundra.lambda.warmup.strategy.WarmupStrategy;
 import io.thundra.lambda.warmup.strategy.WarmupStrategyProvider;
 import io.thundra.lambda.warmup.strategy.impl.StandardWarmupStrategy;
 import io.thundra.lambda.warmup.strategy.impl.StandardWarmupStrategyProvider;
+import io.thundra.lambda.warmup.strategy.impl.StatAwareWarmupStrategy;
 import io.thundra.lambda.warmup.strategy.impl.StrategyAwareWarmupStrategy;
 import org.apache.log4j.Logger;
 
@@ -341,7 +342,7 @@ public class WarmupHandler implements RequestHandler<Object, Object> {
 
         // Discover registered functions
         for (String propertyName : warmupPropertyProvider.getPropertyNames()) {
-            if (propertyName.startsWith(WARMUP_FUNCTION_DECLARATION_PROP_NAME_PREFIX)) {
+            if (propertyName.startsWith(WARMUP_FUNCTION_DECLARATION_PROP_NAME_PREFIX) && !propertyName.trim().equals(StatAwareWarmupStrategy.FUNCTION_INSTANCE_IDLE_TIME_PROP_NAME)) {
                 String functionDeclarationsValue = warmupPropertyProvider.getString(propertyName);
                 String[] functionDeclarations = functionDeclarationsValue.split(",");
                 for (String functionDeclaration : functionDeclarations) {
