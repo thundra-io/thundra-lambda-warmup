@@ -175,7 +175,8 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                     }
                 }
                 logger.info("Detected active instance count for function " + functionName + ": " + activeInstanceCount);
-                invocationCount = Math.max((int) (activeInstanceCount * warmupScaleFactor), 1);
+                int stdInvocationCount = super.getInvocationCount(functionName, defaultInvocationCount, configuredInvocationCount, functionInfo);
+                invocationCount = Math.max((int) (activeInstanceCount * warmupScaleFactor), stdInvocationCount);
 
             } else {
                 invocationCount =
