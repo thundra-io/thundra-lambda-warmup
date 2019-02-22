@@ -96,6 +96,18 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
      */
     public static final String ENABLE_WARMUP_SCALE_PROP_NAME =
             "thundra.lambda.warmup.enableWarmupScale";
+    
+    /**
+     * Name of the <code>String</code> typed property
+     * which configures warmup request message key
+     */
+    public static final String WARMUP_MESSAGE_KEY_PROP_NAME =
+            "thundra.lambda.warmup.warmupMessageKey";
+    /**
+     * Default value for {@link #WARMUP_MESSAGE_KEY_PROP_NAME} property.
+     * The default value is <code>warmup</code>.
+     */
+    public static final String DEFAULT_WARMUP_MESSAGE_KEY = "warmup";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, Map<String, Date>> functionLatestRequestTimeMap =
@@ -103,6 +115,7 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
     private final long functionInstanceIdleTime;
     private final float warmupScaleFactor;
     private final boolean enableWarmupScale;
+    private final String warmupMessageKey;
 
     public StatAwareWarmupStrategy() {
         this(WarmupHandler.DEFAULT_WARMUP_PROPERTY_PROVIDER);
@@ -119,6 +132,7 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                         DEFAULT_WARMUP_SCALE_FACTOR);
         this.enableWarmupScale =
                 warmupPropertyProvider.getBoolean(ENABLE_WARMUP_SCALE_PROP_NAME, false);
+        this.warmupMessageKey = warmupPropertyProvider.getString(WARMUP_MESSAGE_KEY_PROP_NAME, DEFAULT_WARMUP_MESSAGE_KEY);
     }
 
     @Override
@@ -141,7 +155,7 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
         }
         String controlRequest =
                 new ControlRequestBuilder().
-                            controlRequestType("warmup").
+                            controlRequestType(warmupMessageKey).
                             controlRequestArgument(ControlRequestConstants.WAIT_ARGUMENT, delay).
                         build();
         return controlRequest.getBytes();
