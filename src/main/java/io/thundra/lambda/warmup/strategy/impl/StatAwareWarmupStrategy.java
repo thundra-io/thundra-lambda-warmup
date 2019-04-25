@@ -91,11 +91,39 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
 
     /**
      * Name of the <code>boolean</code> typed property
-     * which enabled warmup scale behaviour which is disabled by default
+     * which enables warmup scale behaviour which is disabled by default
      * and scale factor is configured by {@link #WARMUP_SCALE_FACTOR_PROP_NAME} property.
      */
     public static final String ENABLE_WARMUP_SCALE_PROP_NAME =
             "thundra.lambda.warmup.enableWarmupScale";
+
+    /**
+     * Name of the <code>integer</code> typed property
+     * which configures the minimum invocation count for each Lambda function to warmup.
+     * Note that if warmup scale is enabled,
+     * this value is used as lower limit of scaled invocation count.
+     */
+    public static final String MIN_INVOCATION_COUNT_PROP_NAME =
+            "thundra.lambda.warmup.minInvocationCount";
+    /**
+     * Default value for {@link #MIN_INVOCATION_COUNT_PROP_NAME} property.
+     * The default value is <code>1</code>.
+     */
+    public static final int DEFAULT_MIN_INVOCATION_COUNT = 1;
+
+    /**
+     * Name of the <code>integer</code> typed property
+     * which configures the maximum invocation count for each Lambda function to warmup.
+     * Note that if warmup scale is enabled,
+     * this value is used as upper limit of scaled invocation count.
+     */
+    public static final String MAX_INVOCATION_COUNT_PROP_NAME =
+            "thundra.lambda.warmup.maxInvocationCount";
+    /**
+     * Default value for {@link #MAX_INVOCATION_COUNT_PROP_NAME} property.
+     * The default value is {@link java.lang.Integer#MAX_VALUE}.
+     */
+    public static final int DEFAULT_MAX_INVOCATION_COUNT = Integer.MAX_VALUE;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, Map<String, Date>> functionLatestRequestTimeMap =
@@ -103,6 +131,8 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
     private final long functionInstanceIdleTime;
     private final float warmupScaleFactor;
     private final boolean enableWarmupScale;
+    private final int minInvocationCount;
+    private final int maxInvocationCount;
 
     public StatAwareWarmupStrategy() {
         this(WarmupHandler.DEFAULT_WARMUP_PROPERTY_PROVIDER);
@@ -119,6 +149,10 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                         DEFAULT_WARMUP_SCALE_FACTOR);
         this.enableWarmupScale =
                 warmupPropertyProvider.getBoolean(ENABLE_WARMUP_SCALE_PROP_NAME, false);
+        this.minInvocationCount =
+                warmupPropertyProvider.getInteger(MIN_INVOCATION_COUNT_PROP_NAME, DEFAULT_MIN_INVOCATION_COUNT);
+        this.maxInvocationCount =
+                warmupPropertyProvider.getInteger(MAX_INVOCATION_COUNT_PROP_NAME, DEFAULT_MAX_INVOCATION_COUNT);
     }
 
     @Override
@@ -175,14 +209,15 @@ public class StatAwareWarmupStrategy extends StandardWarmupStrategy {
                     }
                 }
                 logger.info("Detected active instance count for function " + functionName + ": " + activeInstanceCount);
-                invocationCount = Math.max((int) (activeInstanceCount * warmupScaleFactor), 1);
-
+                invocationCount = (int) (activeInstanceCount * warmupScaleFactor);
+                invocationCount = Math.max(invocationCount, minInvocationCount);
+                invocationCount = Math.min(invocationCount, maxInvocationCount);
             } else {
                 invocationCount =
                         super.getInvocationCount(functionName, defaultInvocationCount, configuredInvocationCount, functionInfo);
             }
             logger.info(
-                    "Calculated invocation count by taking warmup scale factor into consideration " +
+                    "Calculated invocation count by taking warmup scale factor and mix/max invocation count limits into consideration " +
                     "for function " + functionName + ": " + invocationCount);
         }
         return invocationCount;

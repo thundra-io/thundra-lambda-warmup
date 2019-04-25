@@ -453,4 +453,6 @@ As mentioned above, this strategy can be also be configured to be smart enough t
 
 - `thundra_lambda_warmup_functionInstanceIdleTime`: `Long` typed property that configures the passed time in milliseconds to consider a Lambda function is idle. Default value is `1.800.000 milliseconds` (`30 minutes`).
 - `thundra_lambda_warmup_warmupScaleFactor`: `Float` typed property that configures scale factor to increase/decrease Lambda invocation count according to its stat (it is hot or not). Default value is `2.0`.
-- `thundra_lambda_warmup_disableWarmupScale`: `Boolean` typed property that disables warmup scale behaviour which is enabled by default and scale factor is configured by `thundra_lambda_warmup_warmupScaleFactor` property as mentioned above.
+- `thundra_lambda_warmup_disableWarmupScale`: `Boolean` typed property that disables warmup scale behaviour which is enabled by default and scale factor is configured by `thundra_lambda_warmup_warmupScaleFactor` property.
+- `thundra_lambda_warmup_minInvocationCount`: `Integer` typed property that configures the minimum invocation count for each Lambda function to warmup. Note that if warmup scale is enabled, this value is used as lower limit of scaled invocation count. Default value is `1`.
+- `thundra_lambda_warmup_maxInvocationCount`: `Integer` typed property that configures the maximum invocation count for each Lambda function to warmup. Note that if warmup scale is enabled, this value is used as upper limit of scaled invocation count. Default value is `java.lang.Integer#MAX_VALUE`.
