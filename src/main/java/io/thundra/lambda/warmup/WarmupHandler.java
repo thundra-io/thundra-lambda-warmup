@@ -109,7 +109,7 @@ public class WarmupHandler implements RequestHandler<Object, Object> {
      * and will add it to its function list to warmup.
      */
     public static final String WARMUP_AWARE_ENV_VAR_NAME =
-            "thundra_lambda_warmup_warmupAware";
+            "thundra_agent_lambda_warmup_warmupAware";
     /**
      * Name of the <code>boolean</code> typed property which disables
      * discovery mechanism for warmup aware functions
