@@ -13,7 +13,7 @@ package:
 
 provider:
   name: aws
-  runtime: java8
+  runtime: java8.al2
   stage: ${self:custom.stage}
   region: ${self:custom.region}
   deploymentBucket: ${self:custom.deploymentBucket}
